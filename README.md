@@ -556,6 +556,61 @@ dig @192.229.3.101 ns2.K36.com
 	</ol>
 </blockquote>
 
+<p align="justify">
+&emsp; Langkah pertama adalah mengganti nama dari setiap node supaya sesuai dengan yang ada pada glosarium. Hal ini dapat dilakukan dengan cara beralih ke menu <code>Change Hostname</code> dan mengganti namanya untuk setiap node. Untuk memverifikasi bahwa setiap node mengenali dan menggunakan hostname tersebut, maka kita dapat melakukannya dengan menjalankan command <code>hostname</code> pada setiap node. Menggunakan <b>Elrond</b> dan <b>Cirdan</b> sebagai contoh:
+</p>
+
+<p align="center">
+	<img src="img_modul2/image1.png" alt="elrond" width="80%" height="80%">  
+</p>
+
+<p align="center">
+	<img src="img_modul2/image2.png" alt="cirdan" width="80%" height="80%">  
+</p>
+
+<p align="justify">
+&emsp; Setelah itu, kita perlu menambahkan Address Record (A) untuk IP address dari node selain Tirion dan Valmar yang merujuk ke nama domain yang sejalan dengan nama node tersebut. Di mana langkah implementasinya adalah:
+</p>
+
+1. Memperbarui file `/etc/bind/ns1/K36.com` dan menambahkan klausa Address Record (A) untuk setiap node selain Tirion dan Valmar.
+
+```bash
+cat > /etc/bind/ns1/K36.com <<'EOF'
+$TTL    604800          ; Waktu cache default (detik)
+@       IN      SOA     ns1.K36.com. root.K36.com. (
+                        2025100401 ; Serial (format YYYYMMDDXX)
+                        604800     ; Refresh (1 minggu)
+                        86400      ; Retry (1 hari)
+                        2419200    ; Expire (4 minggu)
+                        604800 )   ; Negative Cache TTL
+;
+
+@       IN      NS      ns1.K36.com.
+@       IN      NS      ns2.K36.com.
+
+ns1        IN      A       192.229.3.101  ; IP Tirion
+ns2        IN      A       192.229.3.102  ; IP Valmar
+@          IN      A       192.229.3.100  ; IP Sirion
+eonwe      IN      A       192.229.1.1
+earendil   IN      A       192.229.1.100
+elwing     IN      A       192.229.1.101
+cirdan     IN      A       192.229.2.100
+elrond     IN      A       192.229.2.101
+maglor     IN      A       192.229.2.102
+sirion     IN      A       192.229.3.100
+lindon     IN      A       192.229.3.103
+vingilot   IN      A       192.229.3.104
+EOF
+```
+
+2. Memperbarui serial dari SOA file `/etc/bind/ns1/K36.com` dari yang awalnya bernilai `2025100401` menjadi `2025100402`.
+
+3. Melakukan restart pada service `bind9`.
+
+```bash
+service bind9 restart
+```
+
 ### • Soal 6
 
 <blockquote>
