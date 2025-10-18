@@ -284,7 +284,7 @@ ln -s /etc/init.d/named /etc/init.d/bind9
 &emsp; Kemudian setelah menginstall bind9, kita perlu melakukan konfigurasi domain terlebih dahulu pada file <code>/etc/bind/named.conf.local</code>. Di mana langkah implementasinya adalah:
 </p>
 
-4. Membuat file konfigurasi `/etc/bind/named.conf.local` dan menetapkan zona DNS `K36.com`.
+4. Membuat file konfigurasi `/etc/bind/named.conf.local` dan menetapkan zona DNS `K36.com` dengan tipe `master` untuk Tirion.
 
 ```bash
 cat > /etc/bind/named.conf.local <<'EOF'
@@ -328,15 +328,232 @@ Langkah selanjutnya adalah membuat zona DNS otoritatif pada Tirion, di mana kete
 Dengan langkah implementasinya:
 </p>
 
+7. Membuat file record zona DNS template pada `/etc/bind/zone.template`.
+
+```bash
+cat > /etc/bind/zone.template <<'EOF'
+$TTL    604800          ; Waktu cache default (detik)
+@       IN      SOA     localhost. root.localhost. (
+                        2025100401 ; Serial (format YYYYMMDDXX)
+                        604800     ; Refresh (1 minggu)
+                        86400      ; Retry (1 hari)
+                        2419200    ; Expire (4 minggu)
+                        604800 )   ; Negative Cache TTL
+;
+
+@       IN      NS      localhost.
+@       IN      A       127.0.0.1
+EOF
+```
+
+8. Menyalin file template ke direktori `/etc/bind/ns1`.
+
+```bash
+cp /etc/bind/zone.template /etc/bind/ns1/K36.com
+```
+
+9. Mengubah isi file template dan menyesuaikannya dengan ketentuan.
+
+```bash
+cat > /etc/bind/ns1/K36.com <<'EOF'
+$TTL    604800          ; Waktu cache default (detik)
+@       IN      SOA     ns1.K36.com. root.K36.com. (
+                        2025100401 ; Serial (format YYYYMMDDXX)
+                        604800     ; Refresh (1 minggu)
+                        86400      ; Retry (1 hari)
+                        2419200    ; Expire (4 minggu)
+                        604800 )   ; Negative Cache TTL
+;
+
+@       IN      NS      ns1.K36.com.
+@       IN      NS      ns2.K36.com.
+
+ns1        IN      A       192.229.3.101  ; IP Tirion
+ns2        IN      A       192.229.3.102  ; IP Valmar
+@          IN      A       192.229.3.100  ; IP Sirion
+EOF
+```
+
+10. Mendelegasikan wewenang atas sebuah subdomain pada file `/etc/bind/named.conf.options`.
+
+```bash
+cat > /etc/bind/named.conf.options <<'EOF'
+options {
+    directory "/var/cache/bind";
+
+    dnssec-validation no;
+    listen-on-v6 { any; };
+    allow-query { any; };
+    auth-nxdomain no;
+};
+EOF
+```
+
+<p align="justify">
+&emsp; Setelah itu, kita perlu mengaktifkan <code>notify</code> dan <code>allow-transfer</code> ke node Valmar, serta menetapkan forwarders ke <code>192.168.122.1</code>. Di mana langkah implementasinya adalah:
+</p>
+
+11. Memperbarui file konfigurasi `/etc/bind/named.conf.local` dan menambahkan klausa yang mengaktifkan `notify` dan `allow-transfer` ke node **Valmar**.
+
+```bash
+cat > /etc/bind/named.conf.local <<'EOF'
+zone "K36.com" {
+        type master;
+        file "/etc/bind/ns1/K36.com";
+        allow-transfer { 192.229.3.102; };
+        also-notify { 192.229.3.102; };
+        notify yes;
+};
+EOF
+```
+
+12. Memperbarui file `/etc/bind/named.conf.options` dan menambahkan klausa yang menetapkan forwarders ke `192.168.122.1`.
+
+```bash
+cat > /etc/bind/named.conf.options <<'EOF'
+options {
+    directory "/var/cache/bind";
+
+    forwarders {
+        192.168.122.1;
+    };
+
+    dnssec-validation no;
+    listen-on-v6 { any; };
+    allow-query { any; };
+    auth-nxdomain no;
+};
+EOF
+```
+
+13. Melakukan restart pada service `bind9`.
+
+```bash
+service bind9 restart
+```
+
+<p align="justify">
+&emsp; Selepas itu, kita juga perlu melakukan konfigurasi pada node Valmar. Di mana langkah pertama yang perlu dilakukan adalah menginstall <b>Bind9</b> pada console <b>Valmar</b> terlebih dahulu. Dengan langkah implementasinya adalah:
+</p>
+
+14. Memperbaharui daftar package yang ada pada apt-get.
+
+```bash
+apt-get update
+```
+
+15. Menginstall `bind9`.
+
+```bash
+apt-get install bind9 -y
+```
+
+16. Membuat link simbolik `/etc/init.d/bind9` yang merujuk ke `/etc/init.d/named`.
+
+```bash
+ln -s /etc/init.d/named /etc/init.d/bind9
+```
+
+<p align="justify">
+&emsp; Kemudian setelah menginstall bind9, kita perlu melakukan konfigurasi domain terlebih dahulu pada file <code>/etc/bind/named.conf.local</code>. Di mana langkah implementasinya adalah:
+</p>
+
+17. Membuat file konfigurasi `/etc/bind/named.conf.local` dan menetapkan zona DNS `K36.com` dengan tipe `slave` untuk Valmar.
+
+```bash
+cat > /etc/bind/named.conf.local <<'EOF'
+zone "K36.com" {
+        type slave;
+        masters { 192.229.3.101; };
+        file "/etc/bind/ns1/K36.com";
+};
+EOF
+```
+
+18. Membuat direktori `/etc/bind/ns1`.
+
+```bash
+mkdir -p /etc/bind/ns1
+```
+
+19. Mengalihkan kepemilikan direktori `/etc/bind/ns1` ke user `bind`.
+```bash
+chown bind:bind /etc/bind/ns1
+```
+
+20. Melakukan restart pada service `bind9`.
+
+```bash
+service bind9 restart
+```
+
+<p align="justify">
+&emsp; Seterusnya, kita perlu memverifikasi bahwasannya zona <code>K36.com</code> yang ditarik dari Tirion dijawab otoritatif oleh Valmar. Di mana kita dapat melakukannya dengan menjalankan:
+</p>
+
+```bash
+dig @192.229.3.102 K36.com SOA
+```
+
+Di mana:
+- `dig`: Utilitas DNS Lookup.
+- `@192.229.3.102`: target server dari DNS Lookup, di mana pada kasus ini adalah **Valmar** dengan IP address `192.229.3.102`.
+- `K36.com`: target zona domain pada Valmar yang ingin di lookup.
+- `SOA`: tipe DNS record yang hendak di lookup. 
+
+<p align="center">
+	<img src="img_modul2/image15.png" alt="valmar" width="80%" height="80%">  
+</p>
+
+<p align="justify">
+&emsp; Berdasarkan screenshot di atas, dapat disimpulkan bahwasannya Valmar berhasil menarik zona <code>K36.com</code> dari Tirion dan memiliki hak otoritatif untuk zona tersebut. Hal ini diindikasikan pada output command <code>dig</code>, khususnya pada bagian <code>flags</code> yang menyatakan flag <code>aa</code> atau Authoritative Answer.
+</p>
+
+<p align="justify">
+&emsp; Terakhir, kita perlu memverifikasi query ke apex dan hostname dijawab melalui ns1 atau ns2. Di mana kita dapat melakukannya dengan menjalankan command <code>dig</code> dengan ketentuan:
+</p>
+
+- Untuk apex:
+
+```bash
+dig @192.229.3.101 K36.com
+dig @192.229.3.102 K36.com
+
+```
+
+- Untuk hostname:
+
+```bash
+dig @192.229.3.101 ns1.K36.com
+dig @192.229.3.101 ns2.K36.com
+```
+
+<p align="center">
+	<img src="img_modul2/image26.png" alt="elrondtotirion" width="80%" height="80%">  
+</p>
+
+<p align="justify">
+&emsp; Berdasarkan screenshot di atas, dapat disimpulkan bahwasannya query ke apex dijawab oleh <code>ns1</code>. Hal ini diindikasikan pada output command <code>dig</code>, khususnya pada bagian <code>SERVER</code> yang menyatakan IP address <code>192.229.3.101</code> yang merupakan IP <b>Tirion</b> atau <code>ns1</code>.
+</p>
+
+<p align="center">
+	<img src="img_modul2/image16.png" alt="elrondtovalmar" width="80%" height="80%">  
+</p>
+
+<p align="justify">
+&emsp; Berdasarkan screenshot di atas, dapat disimpulkan bahwasannya query ke apex dijawab oleh <code>ns2</code>. Hal ini diindikasikan pada output command <code>dig</code>, khususnya pada bagian <code>SERVER</code> yang menyatakan IP address <code>192.229.3.102</code> yang merupakan IP <b>Valmar</b> atau <code>ns2</code>.
+</p>
+
 ### • Soal 5
 
 <blockquote>
-    <ol start="5">
-        <li>
-            <p align="justify">“Nama memberi arah,” kata Eonwe. Namai semua tokoh (hostname) sesuai glosarium, eonwe, earendil, elwing, cirdan, elrond, maglor, sirion, tirion, valmar, lindon, vingilot, dan verifikasi bahwa setiap host mengenali dan menggunakan hostname tersebut secara system-wide. Buat setiap domain untuk masing masing node sesuai dengan namanya (contoh: eru.<xxxx>.com) dan assign IP masing-masing juga. Lakukan pengecualian untuk node yang bertanggung jawab atas ns1 dan ns2.
-    </p>
-        </li>
-    </ol>
+	<ol start="5">
+		<li>
+			<p align="justify">
+				“Nama memberi arah,” kata Eonwe. Namai semua tokoh (hostname) sesuai glosarium, eonwe, earendil, elwing, cirdan, elrond, maglor, sirion, tirion, valmar, lindon, vingilot, dan verifikasi bahwa setiap host mengenali dan menggunakan hostname tersebut secara system-wide. Buat setiap domain untuk masing masing node sesuai dengan namanya (contoh: eru.&lt;xxxx&gt;.com) dan assign IP masing-masing juga. Lakukan pengecualian untuk node yang bertanggung jawab atas ns1 dan ns2.
+			</p>
+		</li>
+	</ol>
 </blockquote>
 
 ### • Soal 6
