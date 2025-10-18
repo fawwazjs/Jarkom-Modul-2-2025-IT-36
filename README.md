@@ -550,7 +550,7 @@ dig @192.229.3.101 ns2.K36.com
 	<ol start="5">
 		<li>
 			<p align="justify">
-				“Nama memberi arah,” kata Eonwe. Namai semua tokoh (hostname) sesuai glosarium, eonwe, earendil, elwing, cirdan, elrond, maglor, sirion, tirion, valmar, lindon, vingilot, dan verifikasi bahwa setiap host mengenali dan menggunakan hostname tersebut secara system-wide. Buat setiap domain untuk masing masing node sesuai dengan namanya (contoh: eru.&lt;xxxx&gt;.com) dan assign IP masing-masing juga. Lakukan pengecualian untuk node yang bertanggung jawab atas ns1 dan ns2.
+				“Nama memberi arah”, kata Eonwe. Namai semua tokoh (hostname) sesuai glosarium, eonwe, earendil, elwing, cirdan, elrond, maglor, sirion, tirion, valmar, lindon, vingilot, dan verifikasi bahwa setiap host mengenali dan menggunakan hostname tersebut secara system-wide. Buat setiap domain untuk masing masing node sesuai dengan namanya (contoh: eru.&lt;xxxx&gt;.com) dan assign IP masing-masing juga. Lakukan pengecualian untuk node yang bertanggung jawab atas ns1 dan ns2.
 			</p>
 		</li>
 	</ol>
@@ -605,6 +605,10 @@ EOF
 
 2. Memperbarui serial dari SOA file `/etc/bind/ns1/K36.com` dari yang awalnya bernilai `2025100401` menjadi `2025100402`.
 
+<p align="center">
+	<img src="img_modul2/image35.png" alt="serial" width="80%" height="80%">  
+</p>
+
 3. Melakukan restart pada service `bind9`.
 
 ```bash
@@ -614,27 +618,53 @@ service bind9 restart
 ### • Soal 6
 
 <blockquote>
-    <ol start="6">
-        <li>
-            <p align="justify">Lonceng Valmar berdentang mengikuti irama Tirion. Pastikan zone transfer berjalan, Pastikan Valmar (ns2) telah menerima salinan zona terbaru dari Tirion (ns1). Nilai serial SOA di keduanya harus sama
-    </p>
-        </li>
-    </ol>
+	<ol start="6">
+		<li>
+			<p align="justify">
+				Lonceng Valmar berdentang mengikuti irama Tirion. Pastikan zone transfer berjalan, Pastikan Valmar (ns2) telah menerima salinan zona terbaru dari Tirion (ns1). Nilai serial SOA di keduanya harus sama.
+			</p>
+		</li>
+	</ol>
 </blockquote>
+
+<p align="justify">
+&emsp; Untuk mengetahui apakah Valmar atau <code>ns2</code> telah menerima salinan zona dari Tirion atau <code>ns1</code>, maka kita dapat menggunakan command <code>dig</code> dengan ketentuan:
+</p>
+
+```bash
+dig @192.229.3.102 K36.com SOA
+```
+
+Di mana:
+- `dig`: Utilitas DNS Lookup.
+- `@192.229.3.102`: target server dari DNS Lookup, di mana pada kasus ini adalah **Valmar** dengan IP address `192.229.3.102`.
+- `K36.com`: target zona domain pada Valmar yang ingin di lookup.
+- `SOA`: tipe DNS record yang hendak di lookup.
+
+<p align="center">
+	<img src="img_modul2/image15.png" alt="valmar" width="80%" height="80%">  
+</p>
+
+<p align="justify">
+&emsp; Berdasarkan screenshot di atas, dapat disimpulkan bahwasannya Valmar berhasil menerima salinan zona dari Tirion. Hal ini diindikasikan pada output command <code>dig</code>, khususnya pada bagian <code>ANSWER SECTION</code> di mana terdapat serial SOA yang telah diperbarui, yakni <code>2025100402</code>. 
+</p>
 
 ### • Soal 7
 
 <blockquote>
-    <ol start="7">
-        <li>
-            <p align="justify">Peta kota dan pelabuhan dilukis. Sirion sebagai gerbang, Lindon sebagai web statis, Vingilot sebagai web dinamis. Tambahkan pada zona <xxxx>.com A record untuk sirion.<xxxx>.com (IP Sirion), lindon.<xxxx>.com (IP Lindon), dan vingilot.<xxxx>.com (IP Vingilot). Tetapkan CNAME :
-www.<xxxx>.com → sirion.<xxxx>.com, 
-static.<xxxx>.com → lindon.<xxxx>.com, dan 
-app.<xxxx>.com → vingilot.<xxxx>.com. 
+	<ol start="7">
+		<li>
+			<p align="justify">
+				Peta kota dan pelabuhan dilukis. Sirion sebagai gerbang, Lindon sebagai web statis, Vingilot sebagai web dinamis. Tambahkan pada zona &lt;xxxx&gt;.com A record untuk sirion.&lt;xxxx&gt;.com (IP Sirion), lindon.&lt;xxxx&gt;.com (IP Lindon), dan vingilot.&lt;xxxx&gt;.com (IP Vingilot). Tetapkan CNAME:
+				<ul>
+					<li>www.&lt;xxxx&gt;.com → sirion.&lt;xxxx&gt;.com,</li>
+					<li>static.&lt;xxxx&gt;.com → lindon.&lt;xxxx&gt;.com, dan</li>
+					<li>app.&lt;xxxx&gt;.com → vingilot.&lt;xxxx&gt;.com.</li>
+				</ul>
 Verifikasi dari dua klien berbeda bahwa seluruh hostname tersebut ter-resolve ke tujuan yang benar dan konsisten.
-    </p>
-        </li>
-    </ol>
+			</p>
+		</li>
+	</ol>
 </blockquote>
 
 ### • Soal 8
