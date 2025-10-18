@@ -80,13 +80,134 @@ Rasulullah Shallallāhu ‘alaihi wa Sallam pernah bersabda:
 </blockquote>
 
 <p align="justify">
-&emsp; Untuk mendefinisikan alamat dan default gateway, maka kita dapat beralih ke menu <code>Configure > Edit Network Configuration</code> untuk setiap node yang ada.
+&emsp; Untuk mendefinisikan dan mengatur alamat dan default gateway, maka kita dapat beralih ke menu <code>Configure > Edit Network Configuration</code> untuk setiap node yang ada.
 </p>
-
 
 <p align="center">
-	<img src="" alt="a" width="80%" height="80%">  
+	<img src="img_modul2/image33.png" alt="eonwe" width="80%" height="80%">  
 </p>
+
+Di mana ketentuan untuk setiap nodenya:
+1. **Eonwe**
+```bash
+auto eth0
+iface eth0 inet dhcp
+
+auto eth1
+iface eth1 inet static
+    address 192.229.1.1
+    netmask 255.255.255.0
+
+auto eth2
+iface eth2 inet static
+    address 192.229.2.1
+    netmask 255.255.255.0
+
+auto eth3
+iface eth3 inet static
+    address 192.229.3.1
+    netmask 255.255.255.0
+```
+
+2. **Earendil**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.1.100
+	netmask 255.255.255.0
+	gateway 192.229.1.1
+```
+
+3. **Elwing**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.1.101
+	netmask 255.255.255.0
+	gateway 192.229.1.1
+```
+
+4. **Cirdan**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.2.100
+	netmask 255.255.255.0
+	gateway 192.229.2.1
+```
+
+5. **Elrond**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.2.101
+	netmask 255.255.255.0
+	gateway 192.229.2.1
+```
+
+6. **Maglor**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.2.102
+	netmask 255.255.255.0
+	gateway 192.229.2.1
+```
+
+7. **Sirion**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.3.100
+	netmask 255.255.255.0
+	gateway 192.229.3.1
+```
+
+8. **Tirion**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.3.101
+	netmask 255.255.255.0
+	gateway 192.229.3.1
+```
+
+9. **Valmar**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.3.102
+	netmask 255.255.255.0
+	gateway 192.229.3.1
+```
+
+10. **Lindon**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.3.103
+	netmask 255.255.255.0
+	gateway 192.229.3.1
+```
+
+11. **Vingilot**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.3.104
+	netmask 255.255.255.0
+	gateway 192.229.3.1
+```
 
 ### • Soal 2
 
