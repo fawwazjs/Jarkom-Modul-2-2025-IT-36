@@ -224,14 +224,27 @@ Angin dari luar mulai berhembus ketika Eonwe membuka jalan ke awan NAT. Pastikan
 ### • Soal 3
 
 <blockquote>
-    <ol start="3">
-        <li>
-            <p align="justify">
-Kabar dari Barat menyapa Timur. Pastikan kelima klien dapat saling berkomunikasi lintas jalur (routing internal via Eonwe berfungsi), lalu pastikan setiap host non-router menambahkan resolver 192.168.122.1 saat interfacenya aktif agar akses paket dari internet tersedia sejak awal.
-    </p>
-        </li>
-    </ol>
+	<ol start="3">
+		<li>
+			<p align="justify">
+				Kabar dari Barat menyapa Timur. Pastikan kelima klien dapat saling berkomunikasi lintas jalur (routing internal via Eonwe berfungsi), lalu pastikan setiap host non-router menambahkan resolver 192.168.122.1 saat interfacenya aktif agar akses paket dari internet tersedia sejak awal.
+			</p>
+		</li>
+	</ol>
 </blockquote>
+
+<p align="justify">
+&emsp; Untuk menambahkan resolver <code>192.168.122.1</code>, maka kita dapat kembali beralih ke menu <code>Configure > Edit Network Configuration</code> untuk setiap node non-router yang ada dan menambahkan <code>up sh -c 'echo "nameserver 192.168.122.1" > /etc/resolv.conf'</code> setelah mendefinisikan address dan default gateway. Sehingga keseluruhan konfigurasinya, dengan menggunakan <b>Maglor</b> sebagai contoh, adalah:
+</p>
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.2.102
+	netmask 255.255.255.0
+	gateway 192.229.2.1
+	up sh -c 'echo "nameserver 192.168.122.1" > /etc/resolv.conf'
+```
 
 ### • Soal 4
 
