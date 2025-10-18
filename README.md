@@ -249,13 +249,84 @@ iface eth0 inet static
 ### • Soal 4
 
 <blockquote>
-    <ol start="4">
-        <li>
-            <p align="justify">Para penjaga nama naik ke menara, di Tirion (ns1/master) bangun zona <xxxx>.com sebagai authoritative dengan SOA yang menunjuk ke ns1.<xxxx>.com dan catatan NS untuk ns1.<xxxx>.com dan ns2.<xxxx>.com. Buat A record untuk ns1.<xxxx>.com dan ns2.<xxxx>.com yang mengarah ke alamat Tirion dan Valmar sesuai glosarium, serta A record apex <xxxx>.com yang mengarah ke alamat Sirion (front door), aktifkan notify dan allow-transfer ke Valmar, set forwarders ke 192.168.122.1. Di Valmar (ns2/slave) tarik zona <xxxx>.com dari Tirion dan pastikan menjawab authoritative. pada seluruh host non-router ubah urutan resolver menjadi IP dari ns1.<xxxx>.com → ns2.<xxxx>.com → 192.168.122.1. Verifikasi query ke apex dan hostname layanan dalam zona dijawab melalui ns1/ns2.
-    </p>
-        </li>
-    </ol>
+	<ol start="4">
+		<li>
+			<p align="justify">
+				Para penjaga nama naik ke menara, di Tirion (ns1/master) bangun zona &lt;xxxx&gt;.com sebagai authoritative dengan SOA yang menunjuk ke ns1.&lt;xxxx&gt;.com dan catatan NS untuk ns1.&lt;xxxx&gt;.com dan ns2.&lt;xxxx&gt;.com. Buat A record untuk ns1.&lt;xxxx&gt;.com dan ns2.&lt;xxxx&gt;.com yang mengarah ke alamat Tirion dan Valmar sesuai glosarium, serta A record apex &lt;xxxx&gt;.com yang mengarah ke alamat Sirion (front door), aktifkan notify dan allow-transfer ke Valmar, set forwarders ke 192.168.122.1. Di Valmar (ns2/slave) tarik zona &lt;xxxx&gt;.com dari Tirion dan pastikan menjawab authoritative. pada seluruh host non-router ubah urutan resolver menjadi IP dari ns1.&lt;xxxx&gt;.com → ns2.&lt;xxxx&gt;.com → 192.168.122.1. Verifikasi query ke apex dan hostname layanan dalam zona dijawab melalui ns1/ns2.
+			</p>
+		</li>
+	</ol>
 </blockquote>
+
+<p align="justify">
+&emsp; Sebelum dapat membuat zona DNS pada Tirion, maka langkah pertama adalah menginstall <b>Bind9</b> pada console <b>Tirion</b> terlebih dahulu. Di mana langkah implementasinya adalah:
+</p>
+
+1. Memperbaharui daftar package yang ada pada apt-get.
+
+```bash
+apt-get update
+```
+
+2. Menginstall `bind9`.
+
+```bash
+apt-get install bind9 -y
+```
+
+3. Membuat link simbolik `/etc/init.d/bind9` yang merujuk ke `/etc/init.d/named`.
+
+```bash
+ln -s /etc/init.d/named /etc/init.d/bind9
+```
+
+<p align="justify">
+&emsp; Kemudian setelah menginstall bind9, kita perlu melakukan konfigurasi domain terlebih dahulu pada file <code>/etc/bind/named.conf.local</code>. Di mana langkah implementasinya adalah:
+</p>
+
+4. Membuat file konfigurasi `/etc/bind/named.conf.local` dan menetapkan zona DNS `K36.com`.
+
+```bash
+cat > /etc/bind/named.conf.local <<'EOF'
+zone "K36.com" {
+        type master;
+        file "/etc/bind/ns1/K36.com";
+};
+EOF
+```
+
+5. Membuat direktori `/etc/bind/ns1`.
+
+```bash
+mkdir -p /etc/bind/ns1
+```
+
+6. Mengalihkan kepemilikan direktori `/etc/bind/ns1` ke user `bind`.
+```bash
+chown bind:bind /etc/bind/ns1
+```
+
+<p align="justify">
+Langkah selanjutnya adalah membuat zona DNS otoritatif pada Tirion, di mana ketentuannya:
+	<ul>
+		<li>
+			Start of Authority (SOA) yang merujuk ke nama domain <code>ns1.K36.com</code>.
+		</li>
+		<li>
+			Nameserver Record (NS) untuk nama domain <code>ns1.K36.com</code> dan <code>ns2.K36.com</code>.
+		</li>
+		<li>
+			Address Record (A) untuk IP address dari node <b>Tirion</b> yang merujuk ke nama domain <code>ns1.K36.com</code>. 
+		</li>
+		<li>
+			Address Record (A) untuk IP address dari node <b>Valmar</b> yang merujuk ke nama domain <code>ns2.K36.com</code>. 
+		</li>
+		<li>
+			Address Record (A) untuk IP address dari node <b>Sirion</b> yang merujuk ke nama domain apex (@) <code>K36.com</code>. 
+		</li>
+	</ul>
+Dengan langkah implementasinya:
+</p>
 
 ### • Soal 5
 
