@@ -307,7 +307,7 @@ chown bind:bind /etc/bind/ns1
 ```
 
 <p align="justify">
-Langkah selanjutnya adalah membuat zona DNS otoritatif pada Tirion, di mana ketentuannya:
+Langkah selanjutnya adalah membuat file zona DNS otoritatif pada Tirion, di mana ketentuannya:
 	<ul>
 		<li>
 			Start of Authority (SOA) yang merujuk ke nama domain <code>ns1.K36.com</code>.
@@ -346,7 +346,7 @@ $TTL    604800          ; Waktu cache default (detik)
 EOF
 ```
 
-8. Menyalin file template ke direktori `/etc/bind/ns1`.
+8. Menyalin file template ke direktori `/etc/bind/ns1` dengan nama `K36.com`.
 
 ```bash
 cp /etc/bind/zone.template /etc/bind/ns1/K36.com
@@ -741,6 +741,81 @@ service bind9 restart
 		</li>
 	</ol>
 </blockquote>
+
+<p align="justify">
+&emsp; Supaya dapat membuat zona Reverse DNS pada Tirion, maka langkah pertama adalah kita perlu memperbarui konfigurasi domain terlebih dahulu pada file <code>/etc/bind/named.conf.local</code>. Di mana langkah implementasinya adalah:
+</p>
+
+1. Menambahkan klausa pada file konfigurasi `/etc/bind/named.conf.local` yang menetapkan zona Reverse DNS `3.229.192.in-addr.arpa` dengan tipe `master` untuk Tirion dan mengaktifkan `notify` dan `allow-transfer` ke node **Valmar**.
+
+```bash
+cat >> /etc/bind/named.conf.local <<'EOF'
+
+zone "3.229.192.in-addr.arpa" {
+        type master;
+        file "/etc/bind/ns1/3.229.192.in-addr.arpa";
+        allow-transfer { 192.229.3.102; };
+        also-notify { 192.229.3.102; };
+        notify yes;
+};
+EOF
+```
+
+<p align="justify">
+Langkah selanjutnya adalah membuat file zona Reverse DNS otoritatif pada Tirion, di mana ketentuannya:
+	<ul>
+		<li>
+			Start of Authority (SOA) yang merujuk ke nama domain <code>ns1.K36.com</code>.
+		</li>
+		<li>
+			Nameserver Record (NS) untuk nama domain <code>ns1.K36.com</code> dan <code>ns2.K36.com</code>.
+		</li>
+		<li>
+			Pointer Record (PTR) untuk nama domain <code>sirion.K36.com</code> yang merujuk ke IP address dari node <b>Sirion</b>. 
+		</li>
+		<li>
+			Pointer Record (PTR) untuk nama domain <code>lindon.K36.com</code> yang merujuk ke IP address dari node <b>Lindon</b>. 
+		</li>
+		<li>
+			Pointer Record (PTR) untuk nama domain <code>vingilot.K36.com</code> yang merujuk ke IP address dari node <b>Vingilot</b>. 
+		</li>
+	</ul>
+Dengan langkah implementasinya:
+</p>
+
+2. Menyalin file template ke direktori `/etc/bind/ns1` dengan nama `3.229.192.in-addr.arpa`.
+
+```bash
+cp /etc/bind/zone.template /etc/bind/ns1/3.229.192.in-addr.arpa
+```
+
+3. Mengubah isi file template dan menyesuaikannya dengan ketentuan.
+
+```bash
+cat > /etc/bind/ns1/3.229.192.in-addr.arpa <<'EOF'
+$TTL    604800          ; Waktu cache default (detik)
+@       IN      SOA     ns1.K36.com. root.K36.com. (
+                        2025100401 ; Serial (format YYYYMMDDXX)
+                        604800     ; Refresh (1 minggu)
+                        86400      ; Retry (1 hari)
+                        2419200    ; Expire (4 minggu)
+                        604800 )   ; Negative Cache TTL
+;
+
+@       IN      NS      ns1.K36.com.
+@       IN      NS      ns2.K36.com.
+
+100     IN      PTR     sirion.K36.com.
+103     IN      PTR     lindon.K36.com.
+104     IN      PTR     vingilot.K36.com.
+EOF
+```
+
+4. Melakukan restart pada service `bind9`.
+
+```bash
+service bind9 restart
+```
 
 ### • Soal 9
 
