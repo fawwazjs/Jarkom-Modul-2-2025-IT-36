@@ -667,152 +667,227 @@ Verifikasi dari dua klien berbeda bahwa seluruh hostname tersebut ter-resolve ke
 	</ol>
 </blockquote>
 
+<p align="justify">
+&emsp; Langkah pertama adalah menambahkan Canonical Name Record (CNAME) atau suatu alias untuk masing-masing nama domain <code>sirion.K36.com</code>, <code>lindon.K36.com</code>, dan <code>vingilot.K36.com</code>. Di mana langkah implementasinya:
+</p>
+
+1. Memperbarui file `/etc/bind/ns1/K36.com` dan menambahkan klausa Canonical Name Record (CNAME) untuk nama domain node Sirion, Lindon, dan Vingilot:
+
+```bash
+cat > /etc/bind/ns1/K36.com <<'EOF'
+$TTL    604800          ; Waktu cache default (detik)
+@       IN      SOA     ns1.K36.com. root.K36.com. (
+                        2025100402 ; Serial (format YYYYMMDDXX)
+                        604800     ; Refresh (1 minggu)
+                        86400      ; Retry (1 hari)
+                        2419200    ; Expire (4 minggu)
+                        604800 )   ; Negative Cache TTL
+;
+
+@       IN      NS      ns1.K36.com.
+@       IN      NS      ns2.K36.com.
+
+ns1        IN      A       192.229.3.101  ; IP Tirion
+ns2        IN      A       192.229.3.102  ; IP Valmar
+@          IN      A       192.229.3.100  ; IP Sirion
+eonwe      IN      A       192.229.1.1
+earendil   IN      A       192.229.1.100
+elwing     IN      A       192.229.1.101
+cirdan     IN      A       192.229.2.100
+elrond     IN      A       192.229.2.101
+maglor     IN      A       192.229.2.102
+sirion     IN      A       192.229.3.100
+lindon     IN      A       192.229.3.103
+vingilot   IN      A       192.229.3.104
+
+www     IN      CNAME   sirion.K36.com.
+static  IN      CNAME   lindon.K36.com.
+app     IN      CNAME   vingilot.K36.com.
+EOF
+```
+
+2. Memperbarui serial dari SOA file `/etc/bind/ns1/K36.com` dari yang awalnya bernilai `2025100402` menjadi `2025100403`.
+
+3. Melakukan restart pada service `bind9`.
+
+```bash
+service bind9 restart
+```
+
+<p align="justify">
+&emsp; Terakhir, kita perlu memverifikasi bahwasannya seluruh hostname tersebut berhasil ter-resolve ke tujuan yang benar dan konsisten. Di mana hal ini dapat dilakukan dengan menjalankan command <code>host</code> untuk setiap Canonical Name Record (CNAME). Menggunakan <b>Elrond</b> dan <b>Cirdan</b> sebagai contoh:
+</p>
+
+<p align="center">
+	<img src="img_modul2/image13.png" alt="elrondcname" width="80%" height="80%">  
+</p>
+
+<p align="center">
+	<img src="img_modul2/image9.png" alt="cirdancname" width="80%" height="80%">  
+</p>
+
+<p align="justify">
+&emsp; Berdasarkan kedua screenshot di atas dapat disimpulkan bahwasannya masing-masing dari CNAME Record sudah berhasil ter-resolve ke tujuan yang benar dan konsisten pada setidaknya dua klien.
+</p>
+
 ### • Soal 8
 
 <blockquote>
-    <ol start="8">
-        <li>
-            <p align="justify">Setiap jejak harus bisa diikuti. Di Tirion (ns1) deklarasikan satu reverse zone untuk segmen DMZ tempat Sirion, Lindon, Vingilot berada. Di Valmar (ns2) tarik reverse zone tersebut sebagai slave, isi PTR untuk ketiga hostname itu agar pencarian balik IP address mengembalikan hostname yang benar, lalu pastikan query reverse untuk alamat Sirion, Lindon, Vingilot dijawab authoritative.
-    </p>
-        </li>
-    </ol>
+	<ol start="8">
+		<li>
+			<p align="justify">
+				Setiap jejak harus bisa diikuti. Di Tirion (ns1) deklarasikan satu reverse zone untuk segmen DMZ tempat Sirion, Lindon, Vingilot berada. Di Valmar (ns2) tarik reverse zone tersebut sebagai slave, isi PTR untuk ketiga hostname itu agar pencarian balik IP address mengembalikan hostname yang benar, lalu pastikan query reverse untuk alamat Sirion, Lindon, Vingilot dijawab authoritative.
+			</p>
+		</li>
+	</ol>
 </blockquote>
 
 ### • Soal 9
 
 <blockquote>
-    <ol start="9">
-        <li>
-            <p align="justify">Lampion Lindon dinyalakan. Jalankan web statis pada hostname static.<xxxx>.com dan buka folder arsip /annals/ dengan autoindex (directory listing) sehingga isinya dapat ditelusuri. Akses harus dilakukan melalui hostname, bukan IP.
-    </p>
-        </li>
-    </ol>
+	<ol start="9">
+		<li>
+			<p align="justify">
+				Lampion Lindon dinyalakan. Jalankan web statis pada hostname static.&lt;xxxx&gt;.com dan buka folder arsip /annals/ dengan autoindex (directory listing) sehingga isinya dapat ditelusuri. Akses harus dilakukan melalui hostname, bukan IP.
+			</p>
+		</li>
+	</ol>
 </blockquote>
 
 ### • Soal 10
 
 <blockquote>
-    <ol start="10">
-        <li>
-            <p align="justify">Vingilot mengisahkan cerita dinamis. Jalankan web dinamis (PHP-FPM) pada hostname app.<xxxx>.com dengan beranda dan halaman about, serta terapkan rewrite sehingga /about berfungsi tanpa akhiran .php. Akses harus dilakukan melalui hostname.
-    </p>
-        </li>
-    </ol>
+	<ol start="10">
+		<li>
+			<p align="justify">
+				Vingilot mengisahkan cerita dinamis. Jalankan web dinamis (PHP-FPM) pada hostname app.&lt;xxxx&gt;.com dengan beranda dan halaman about, serta terapkan rewrite sehingga /about berfungsi tanpa akhiran .php. Akses harus dilakukan melalui hostname.
+			</p>
+		</li>
+	</ol>
 </blockquote>
 
 ### • Soal 11
 
 <blockquote>
-    <ol start="11">
-        <li>
-            <p align="justify">Di muara sungai, Sirion berdiri sebagai reverse proxy. Terapkan path-based routing: /static → Lindon dan /app → Vingilot, sambil meneruskan header Host dan X-Real-IP ke backend. Pastikan Sirion menerima www.<xxxx>.com (kanonik) dan sirion.<xxxx>.com, dan bahwa konten pada /static dan /app di-serve melalui backend yang tepat.
-    </p>
-        </li>
-    </ol>
+	<ol start="11">
+		<li>
+			<p align="justify">
+				Di muara sungai, Sirion berdiri sebagai reverse proxy. Terapkan path-based routing: /static → Lindon dan /app → Vingilot, sambil meneruskan header Host dan X-Real-IP ke backend. Pastikan Sirion menerima www.&lt;xxxx&gt;.com (kanonik) dan sirion.&lt;xxxx&gt;.com, dan bahwa konten pada /static dan /app di-serve melalui backend yang tepat.
+			</p>
+		</li>
+	</ol>
 </blockquote>
 
 ### • Soal 12
 
 <blockquote>
-    <ol start="12">
-        <li>
-            <p align="justify">Ada kamar kecil di balik gerbang yakni /admin. Lindungi path tersebut di Sirion menggunakan Basic Auth, akses tanpa kredensial harus ditolak dan akses dengan kredensial yang benar harus diizinkan.
-    </p>
-        </li>
-    </ol>
+	<ol start="12">
+		<li>
+			<p align="justify">
+				Ada kamar kecil di balik gerbang yakni /admin. Lindungi path tersebut di Sirion menggunakan Basic Auth, akses tanpa kredensial harus ditolak dan akses dengan kredensial yang benar harus diizinkan.
+			</p>
+		</li>
+	</ol>
 </blockquote>
 
 ### • Soal 13
 
 <blockquote>
-    <ol start="13">
-        <li>
-            <p align="justify">“Panggil aku dengan nama,” ujar Sirion kepada mereka yang datang hanya menyebut angka. Kanonisasikan endpoint, akses melalui IP address Sirion maupun sirion.<xxxx>.com harus redirect 301 ke www.<xxxx>.com sebagai hostname kanonik.
-    </p>
-        </li>
-    </ol>
+	<ol start="13">
+		<li>
+			<p align="justify">
+				“Panggil aku dengan nama,” ujar Sirion kepada mereka yang datang hanya menyebut angka. Kanonisasikan endpoint, akses melalui IP address Sirion maupun sirion.&lt;xxxx&gt;.com harus redirect 301 ke www.&lt;xxxx&gt;.com sebagai hostname kanonik.
+			</p>
+		</li>
+	</ol>
 </blockquote>
 
 ### • Soal 14
 
 <blockquote>
-    <ol start="14">
-        <li>
-            <p align="justify">Di Vingilot, catatan kedatangan harus jujur. Pastikan access log aplikasi di Vingilot mencatat IP address klien asli saat lalu lintas melewati Sirion (bukan IP Sirion).
-    </p>
-        </li>
-    </ol>
+	<ol start="14">
+		<li>
+			<p align="justify">
+				Di Vingilot, catatan kedatangan harus jujur. Pastikan access log aplikasi di Vingilot mencatat IP address klien asli saat lalu lintas melewati Sirion (bukan IP Sirion).
+			</p>
+		</li>
+	</ol>
 </blockquote>
 
 ### • Soal 15
 
 <blockquote>
-    <ol start="15">
-        <li>
-            <p align="justify">Pelabuhan diuji gelombang kecil, salah satu klien yakni Elrond menjadi penguji dan menggunakan ApacheBench (ab) untuk membombardir http://www.<xxxx>.com/app/ dan http://www.<xxxx>.com/static/ melalui hostname kanonik. Untuk setiap endpoint lakukan 500 request dengan concurrency 10, dan rangkum hasil dalam tabel ringkas.
-    </p>
-        </li>
-    </ol>
+	<ol start="15">
+		<li>
+			<p align="justify">
+				Pelabuhan diuji gelombang kecil, salah satu klien yakni Elrond menjadi penguji dan menggunakan ApacheBench (ab) untuk membombardir http://www.&lt;xxxx&gt;.com/app/ dan http://www.&lt;xxxx&gt;.com/static/ melalui hostname kanonik. Untuk setiap endpoint lakukan 500 request dengan concurrency 10, dan rangkum hasil dalam tabel ringkas.
+			</p>
+		</li>
+	</ol>
 </blockquote>
 
 ### • Soal 16
 
 <blockquote>
-    <ol start="16">
-        <li>
-            <p align="justify">Badai mengubah garis pantai. Ubah A record lindon.<xxxx>.com ke alamat baru (ubah IP paling belakangnya saja agar mudah), naikkan SOA serial di Tirion (ns1) dan pastikan Valmar (ns2) tersinkron, karena static.<xxxx>.com adalah CNAME → lindon.<xxxx>.com, seluruh akses ke static.<xxxx>.com mengikuti alamat baru, tetapkan TTL = 30 detik untuk record yang relevan dan verifikasi tiga momen yakni sebelum perubahan (mengembalikan alamat lama), sesaat setelah perubahan namun sebelum TTL kedaluwarsa (masih alamat lama karena cache), dan setelah TTL kedaluwarsa (beralih ke alamat baru).
-    </p>
-        </li>
-    </ol>
+	<ol start="16">
+		<li>
+			<p align="justify">
+				Badai mengubah garis pantai. Ubah A record lindon.&lt;xxxx&gt;.com ke alamat baru (ubah IP paling belakangnya saja agar mudah), naikkan SOA serial di Tirion (ns1) dan pastikan Valmar (ns2) tersinkron, karena static.&lt;xxxx&gt;.com adalah CNAME → lindon.&lt;xxxx&gt;.com, seluruh akses ke static.&lt;xxxx&gt;.com mengikuti alamat baru, tetapkan TTL = 30 detik untuk record yang relevan dan verifikasi tiga momen yakni sebelum perubahan (mengembalikan alamat lama), sesaat setelah perubahan namun sebelum TTL kedaluwarsa (masih alamat lama karena cache), dan setelah TTL kedaluwarsa (beralih ke alamat baru).
+			</p>
+		</li>
+	</ol>
 </blockquote>
 
 ### • Soal 17
 
 <blockquote>
-    <ol start="17">
-        <li>
-            <p align="justify">Andaikata bumi bergetar dan semua tertidur sejenak, mereka harus bangkit sendiri. Pastikan layanan inti bind9 di ns1/ns2, nginx di Sirion/Lindon, dan PHP-FPM di Vingilot autostart saat reboot, lalu verifikasi layanan kembali menjawab sesuai fungsinya.
-    </p>
-        </li>
-    </ol>
+	<ol start="17">
+		<li>
+			<p align="justify">
+				Andaikata bumi bergetar dan semua tertidur sejenak, mereka harus bangkit sendiri. Pastikan layanan inti bind9 di ns1/ns2, nginx di Sirion/Lindon, dan PHP-FPM di Vingilot autostart saat reboot, lalu verifikasi layanan kembali menjawab sesuai fungsinya.
+			</p>
+		</li>
+	</ol>
 </blockquote>
 
 ### • Soal 18
 
 <blockquote>
-    <ol start="18">
-        <li>
-            <p align="justify">Sang musuh memiliki banyak nama. Tambahkan melkor.<xxxx>.com sebagai record TXT berisi “Morgoth (Melkor)” dan tambahkan morgoth.<xxxx>.com sebagai CNAME → melkor.<xxxx>.com, verifikasi query TXT terhadap melkor dan bahwa query ke morgoth mengikuti aliasnya.
-    </p>
-        </li>
-    </ol>
+	<ol start="18">
+		<li>
+			<p align="justify">
+				Sang musuh memiliki banyak nama. Tambahkan melkor.&lt;xxxx&gt;.com sebagai record TXT berisi “Morgoth (Melkor)” dan tambahkan morgoth.&lt;xxxx&gt;.com sebagai CNAME → melkor.&lt;xxxx&gt;.com, verifikasi query TXT terhadap melkor dan bahwa query ke morgoth mengikuti aliasnya.
+			</p>
+		</li>
+	</ol>
 </blockquote>
-
 
 ### • Soal 19
 
 <blockquote>
-    <ol start="19">
-        <li>
-            <p align="justify">Pelabuhan diperluas bagi para pelaut. Tambahkan havens.<xxxx>.com sebagai CNAME → www.<xxxx>.com, lalu akses layanan melalui hostname tersebut dari dua klien berbeda untuk memastikan resolusi dan rute aplikasi berfungsi.
-    </p>
-        </li>
-    </ol>
+	<ol start="19">
+		<li>
+			<p align="justify">
+				Pelabuhan diperluas bagi para pelaut. Tambahkan havens.&lt;xxxx&gt;.com sebagai CNAME → www.&lt;xxxx&gt;.com, lalu akses layanan melalui hostname tersebut dari dua klien berbeda untuk memastikan resolusi dan rute aplikasi berfungsi.
+			</p>
+		</li>
+	</ol>
 </blockquote>
 
 ### • Soal 20
 
 <blockquote>
     <ol start="20">
-        <li>
-            <p align="justify">Kisah ditutup di beranda Sirion. Sediakan halaman depan bertajuk “War of Wrath: Lindon bertahan” yang memuat tautan ke /app dan /static. Pastikan seluruh klien membuka beranda dan menelusuri kedua tautan tersebut menggunakan hostname (mis. www.<xxxx>.com), bukan IP address.
-    </p>
-        </li>
-    </ol>
+		<li>
+			<p align="justify">
+				Kisah ditutup di beranda Sirion. Sediakan halaman depan bertajuk “War of Wrath: Lindon bertahan” yang memuat tautan ke /app dan /static. Pastikan seluruh klien membuka beranda dan menelusuri kedua tautan tersebut menggunakan hostname (mis. www.&lt;xxxx&gt;.com), bukan IP address.
+			</p>
+		</li>
+	</ol>
 </blockquote>
 
-
 ## Kendala Pengerjaan
+
 <ol>
 	<li>
 		<p align="justify">
