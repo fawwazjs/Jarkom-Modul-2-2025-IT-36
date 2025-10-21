@@ -262,7 +262,7 @@ iface eth0 inet static
 &emsp; Sebelum dapat membuat zona DNS pada Tirion, maka langkah pertama adalah menginstall <b>Bind9</b> pada console <b>Tirion</b> terlebih dahulu. Di mana langkah implementasinya adalah:
 </p>
 
-1. Memperbaharui daftar package yang ada pada apt-get.
+1. Memperbarui daftar package yang ada pada apt-get.
 
 ```bash
 apt-get update
@@ -936,6 +936,111 @@ service bind9 restart
 		</li>
 	</ol>
 </blockquote>
+
+<p align="justify">
+&emsp; Langkah pertama adalah menambahkan Text Record (TXT) yang berisi <code>"Morgoth (Melkor)"</code> untuk nama domain <code>melkor.K36.com</code>. Di mana langkah implementasinya adalah:
+</p>
+
+1. Memperbarui file `/etc/bind/ns1/K36.com` dan menambahkan klausa Text Record (TXT) untuk nama domain `melkor.K36.com`.
+
+```bash
+cat > /etc/bind/ns1/K36.com <<'EOF'
+$TTL    604800          ; Waktu cache default (detik)
+@       IN      SOA     ns1.K36.com. root.K36.com. (
+                        2025100403 ; Serial (format YYYYMMDDXX)
+                        604800     ; Refresh (1 minggu)
+                        86400      ; Retry (1 hari)
+                        2419200    ; Expire (4 minggu)
+                        604800 )   ; Negative Cache TTL
+;
+
+@       IN      NS      ns1.K36.com.
+@       IN      NS      ns2.K36.com.
+
+ns1        IN      A       192.229.3.101  ; IP Tirion
+ns2        IN      A       192.229.3.102  ; IP Valmar
+@          IN      A       192.229.3.100  ; IP Sirion
+eonwe      IN      A       192.229.1.1
+earendil   IN      A       192.229.1.100
+elwing     IN      A       192.229.1.101
+cirdan     IN      A       192.229.2.100
+elrond     IN      A       192.229.2.101
+maglor     IN      A       192.229.2.102
+sirion     IN      A       192.229.3.100
+lindon     IN      A       192.229.3.103
+vingilot   IN      A       192.229.3.104
+
+melkor  IN      TXT     "Morgoth (Melkor)"
+EOF
+```
+
+2. Memperbarui serial dari SOA file `/etc/bind/ns1/K36.com` dari yang awalnya bernilai `2025100403` menjadi `2025100404`.
+
+<p align="justify">
+&emsp; Setelah itu, kita perlu menambahkan Canonical Name Record (CNAME) atau suatu alias untuk nama domain <code>melkor.K36.com</code>. Di mana langkah implementasinya:
+</p>
+
+3. Memperbarui file `/etc/bind/ns1/K36.com` dan menambahkan klausa Canonical Name Record (CNAME) untuk nama domain `melkor.K36.com`:
+
+```bash
+cat > /etc/bind/ns1/K36.com <<'EOF'
+$TTL    604800          ; Waktu cache default (detik)
+@       IN      SOA     ns1.K36.com. root.K36.com. (
+                        2025100404 ; Serial (format YYYYMMDDXX)
+                        604800     ; Refresh (1 minggu)
+                        86400      ; Retry (1 hari)
+                        2419200    ; Expire (4 minggu)
+                        604800 )   ; Negative Cache TTL
+;
+
+@       IN      NS      ns1.K36.com.
+@       IN      NS      ns2.K36.com.
+
+ns1        IN      A       192.229.3.101  ; IP Tirion
+ns2        IN      A       192.229.3.102  ; IP Valmar
+@          IN      A       192.229.3.100  ; IP Sirion
+eonwe      IN      A       192.229.1.1
+earendil   IN      A       192.229.1.100
+elwing     IN      A       192.229.1.101
+cirdan     IN      A       192.229.2.100
+elrond     IN      A       192.229.2.101
+maglor     IN      A       192.229.2.102
+sirion     IN      A       192.229.3.100
+lindon     IN      A       192.229.3.103
+vingilot   IN      A       192.229.3.104
+
+www     IN      CNAME   sirion.K36.com.
+static  IN      CNAME   lindon.K36.com.
+app     IN      CNAME   vingilot.K36.com.
+
+melkor  IN      TXT     "Morgoth (Melkor)"
+morgoth IN      CNAME   melkor.K36.com.
+EOF
+```
+
+4. Memperbarui serial dari SOA file `/etc/bind/ns1/K36.com` dari yang awalnya bernilai `2025100404` menjadi `2025100405`.
+
+5. Melakukan restart pada service `bind9`.
+
+```bash
+service bind9 restart
+```
+
+<p align="justify">
+&emsp; Terakhir, kita perlu memverifikasi bahwasannya query Text (TXT) terhadap <code>melkor.K36.com</code> dan alias untuk nama domain <code>melkor.K36.com</code> berhasil ter-resolve ke tujuan yang benar dan konsisten. Di mana hal ini dapat dilakukan dengan menjalankan command <code>dig</code> untuk query Text (TXT) dan command <code>host</code> untuk query Canonical Name Record (CNAME). Menggunakan <b>Elrond</b> dan <b>Cirdan</b> sebagai contoh:
+</p>
+
+<p align="center">
+	<img src="img_modul2/image37.png" alt="elrondtomelkor" width="80%" height="80%">  
+</p>
+
+<p align="center">
+	<img src="img_modul2/image36.png" alt="cirdantomelkor" width="80%" height="80%">  
+</p>
+
+<p align="justify">
+&emsp; Berdasarkan kedua screenshot di atas dapat disimpulkan bahwasannya masing-masing dari TXT Record dan CNAME Record sudah berhasil ter-resolve ke tujuan yang benar dan konsisten pada setidaknya dua klien.
+</p>
 
 ### • Soal 19
 
