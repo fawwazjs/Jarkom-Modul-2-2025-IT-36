@@ -1054,6 +1054,74 @@ service bind9 restart
 	</ol>
 </blockquote>
 
+<p align="justify">
+&emsp; Supaya dapat menambahkan Canonical Name Record (CNAME) untuk <code>www.K36.com</code>, maka kita perlu memperbarui file <code>/etc/bind/ns1/K36.com</code>. Di mana langkah implementasinya adalah:
+</p>
+
+1. Memperbarui file `/etc/bind/ns1/K36.com` dan menambahkan klausa Canonical Name Record (CNAME) untuk nama domain `www.K36.com`.
+
+```bash
+cat > /etc/bind/ns1/K36.com <<'EOF'
+$TTL    604800          ; Waktu cache default (detik)
+@       IN      SOA     ns1.K36.com. root.K36.com. (
+                        2025100405 ; Serial (format YYYYMMDDXX)
+                        604800     ; Refresh (1 minggu)
+                        86400      ; Retry (1 hari)
+                        2419200    ; Expire (4 minggu)
+                        604800 )   ; Negative Cache TTL
+;
+
+@       IN      NS      ns1.K36.com.
+@       IN      NS      ns2.K36.com.
+
+ns1        IN      A       192.229.3.101  ; IP Tirion
+ns2        IN      A       192.229.3.102  ; IP Valmar
+@          IN      A       192.229.3.100  ; IP Sirion
+eonwe      IN      A       192.229.1.1
+earendil   IN      A       192.229.1.100
+elwing     IN      A       192.229.1.101
+cirdan     IN      A       192.229.2.100
+elrond     IN      A       192.229.2.101
+maglor     IN      A       192.229.2.102
+sirion     IN      A       192.229.3.100
+lindon     IN      A       192.229.3.103
+vingilot   IN      A       192.229.3.104
+
+www     IN      CNAME   sirion.K36.com.
+static  IN      CNAME   lindon.K36.com.
+app     IN      CNAME   vingilot.K36.com.
+
+melkor  IN      TXT     "Morgoth (Melkor)"
+morgoth IN      CNAME   melkor.K36.com.
+
+havens  IN      CNAME   www.K36.com.
+EOF
+```
+
+2. Memperbarui serial dari SOA file `/etc/bind/ns1/K36.com` dari yang awalnya bernilai `2025100405` menjadi `2025100406`.
+
+3. Melakukan restart pada service `bind9`.
+
+```bash
+service bind9 restart
+```
+
+<p align="justify">
+&emsp; Terakhir, kita perlu memverifikasi bahwasannya alias untuk nama domain <code>www.K36.com</code> berhasil ter-resolve ke tujuan yang benar dan konsisten. Di mana hal ini dapat dilakukan dengan menjalankan command <code>host</code> untuk query Canonical Name Record (CNAME). Menggunakan <b>Elrond</b> dan <b>Cirdan</b> sebagai contoh:
+</p>
+
+<p align="center">
+	<img src="img_modul2/image38.png" alt="elrondtomelkor" width="80%" height="80%">  
+</p>
+
+<p align="center">
+	<img src="img_modul2/image39.png" alt="cirdantomelkor" width="80%" height="80%">  
+</p>
+
+<p align="justify">
+&emsp; Berdasarkan kedua screenshot di atas dapat disimpulkan bahwasannya CNAME Record sudah berhasil ter-resolve ke tujuan yang benar dan konsisten pada setidaknya dua klien.
+</p>
+
 ### • Soal 20
 
 <blockquote>
