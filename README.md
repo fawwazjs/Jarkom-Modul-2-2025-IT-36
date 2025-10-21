@@ -25,12 +25,21 @@ Rasulullah Shallallāhu ‘alaihi wa Sallam pernah bersabda:
 
 
 <em>Artinya</em>:
-<p align="justify">  
+<p align="justify">
 "Apabila anak Adam meninggal dunia, maka terputuslah amalnya kecuali tiga perkara: sedekah jariyah, ilmu yang bermanfaat, atau anak shalih yang mendoakannya." 
-  
+<br>
 (HR. Muslim, no. 1631)
 </p>
-  
+  
+وَمَنْ سَلَكَ طَرِيقًا يَلْتَمِسُ فِيهِ عِلْمًا سَهَّلَ اللَّهُ لَهُ بِهِ طَرِيقًا إِلَى الْجَنَّةِ
+
+<em>Artinya</em>:
+<p align="justify">
+"Barang siapa yang menempuh jalan untuk mencari ilmu, maka Allah akan mudahkan baginya jalan menuju surga." 
+ <br>
+(HR. Muslim, no. 2699)
+</p>
+  
 <p align="justify">
 &emsp; Maka dari itu, semoga apa yang tertulis pada laporan ini dapat menjadi ilmu yang bermanfaat, serta menjadi keberkahan dan amal yang diterima di sisi Allah Subḥānahu wa Ta‘ālā. Semoga bagi yang membaca ini, Allah memudahkan semua langkahnya dalam menuntut ilmu, mengamalkannya, serta menjaganya agar tidak sekadar menjadi hafalan, namun juga menjadi bekal yang membawanya ke surga.
 </p>
