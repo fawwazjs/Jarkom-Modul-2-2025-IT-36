@@ -1343,6 +1343,78 @@ Hasil yang diharapkan:
 	</ol>
 </blockquote>
 
+<p align="justify">
+&emsp; Langkah pertama adalah kita perlu menginstall depedensi yang diperlukan untuk melakukan pengujian, di mana pada kasus ini yaitu <b>ApacheBench</b> atau <code>ab</code>. Di mana langkah implementasinya pada <b>Elrond</b> adalah:
+</p>
+
+1. Memperbarui daftar package yang ada pada apt-get.
+
+```bash
+apt-get update
+```
+
+2. Menginstall `apache2-utils`.
+
+```bash
+apt-get install apache2-utils -y
+```
+
+<p align="justify">
+&emsp; Selanjutnya merupakan proses pengujian pada nama domain <code>www.K36.com/app/</code> dan <code>www.K36.com/static/</code> dengan ketentuan <b>500</b> request dan <b>10</b> concurrency. Di mana langkah implementasinya adalah:
+</p>
+
+3. Menjalankan command `ab` untuk domain `www.K36.com/static/` dan menyimpannya pada suatu file output.
+
+```bash
+ab -n 500 -c 10 http://www.K36.com/static/ > /root/static.out
+```
+
+4. Menjalankan command `ab` untuk domain `www.K36.com/app/` dan menyimpannya pada suatu file output.
+
+```bash
+ab -n 500 -c 10 http://www.K36.com/app/ > /root/app.out
+```
+
+<p align="justify">
+&emsp; Setelah itu, kita perlu mengolah keluaran dari <b>ApacheBench</b> dan menyajikannya ke dalam bentuk tabel ringkas. Di mana langkah implementasinya adalah:
+</p>
+
+5. Mengambil data yang diperlukan dari keluaran ApacheBench menggunakan command `grep`.
+
+```bash
+parse() {
+  f="$1"
+  r=$(grep -E "Complete requests:" "$f" | awk '{print $3}')
+  fr=$(grep -E "Failed requests:" "$f" | awk '{print $3}')
+  rps=$(grep -E "Requests per second:" "$f" | awk '{print $4}')
+  tpr_mean=$(grep -E "Time per request:" "$f" | head -n1 | awk '{print $4}')
+  tpr_conc=$(grep -E "Time per request:" "$f" | tail -n1 | awk '{print $4}')
+  transfer=$(grep -E "Transfer rate:" "$f" | awk '{print $(NF-2) " " $(NF-1) " " $NF}')
+  echo "$r,$fr,$rps,$tpr_mean,$tpr_conc,$transfer"
+}
+
+parse /root/static.out > /root/output.csv
+parse /root/app.out >> /root/output.csv
+```
+
+6. Menampilkan keluaran data tersebut ke dalam bentuk tabel ringkas menggunakan command `awk`.
+
+```bash
+awk -F, 'BEGIN {
+    printf "| %-18s | %-18s | %-23s | %-23s | %-23s | %-29s |\n", \
+           "Requests", "Failed", "Req/Sec", "Time/Req(ms)", "Transfer(KB/s)", "Note";
+    print "|--------------------|--------------------|-------------------------|-------------------------|-------------------------|-------------------------------|";
+}
+{
+    printf "| %-18s | %-18s | %-23s | %-23s | %-23s | %-29s |\n", \
+           $1, $2, $3, $4, $5, $6;
+}' /root/output.csv
+```
+
+<p align="center">
+	<img src="img_modul2/image20.png" alt="apache" width="80%" height="80%">  
+</p>
+
 ### • Soal 16
 
 <blockquote>
