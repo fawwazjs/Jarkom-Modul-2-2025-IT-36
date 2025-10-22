@@ -78,6 +78,7 @@ Rasulullah Shallallāhu ‘alaihi wa Sallam pernah bersabda:
   	- [Soal 19](#-soal-19)
   	- [Soal 20](#-soal-20)
 - [Kendala Pengerjaan](#kendala-pengerjaan)
+- [Revisi](#revisi)
 
 ## Walkthrough
 
@@ -927,18 +928,6 @@ service bind9 restart
 	</ol>
 </blockquote>
 
-### • Soal 17
-
-<blockquote>
-	<ol start="17">
-		<li>
-			<p align="justify">
-				Andaikata bumi bergetar dan semua tertidur sejenak, mereka harus bangkit sendiri. Pastikan layanan inti bind9 di ns1/ns2, nginx di Sirion/Lindon, dan PHP-FPM di Vingilot autostart saat reboot, lalu verifikasi layanan kembali menjawab sesuai fungsinya.
-			</p>
-		</li>
-	</ol>
-</blockquote>
-
 ### • Soal 18
 
 <blockquote>
@@ -1156,3 +1145,57 @@ service bind9 restart
 		</p>
 	</li>
 </ol>
+
+## Revisi
+
+### • Soal 17
+
+<blockquote>
+	<ol start="17">
+		<li>
+			<p align="justify">
+				Andaikata bumi bergetar dan semua tertidur sejenak, mereka harus bangkit sendiri. Pastikan layanan inti bind9 di ns1/ns2, nginx di Sirion/Lindon, dan PHP-FPM di Vingilot autostart saat reboot, lalu verifikasi layanan kembali menjawab sesuai fungsinya.
+			</p>
+		</li>
+	</ol>
+</blockquote>
+
+<p align="justify">
+&emsp; Supaya layanan inti <code>bind9</code>, <code>nginx</code>, dan <code>PHP-FPM</code> dapat berjalan langsung saat reboot di mana pada kasus ini saat node diberhentikan dan dijalankan kembali, maka kita dapat beralih ke menu <code>Configure > Edit Network Configuration</code> untuk setiap node yang bersangkutan. Di mana langkah implementasinya:
+</p>
+
+1. Menambahkan `up sh -c 'service bind9 start'` untuk `Tirion` dan `Valmar`.
+
+<p align="center">
+	<img src="img_modul2/image40.png" alt="tirionbind" width="80%" height="80%">  
+</p>
+
+2. Memverifikasi bahwasannya layanan `bind9` kembali menjawab sesuai fungsinya.
+
+<p align="center">
+	<img src="img_modul2/image41.png" alt="tirionbind" width="80%" height="80%">  
+</p>
+
+3. Menambahkan `up sh -c 'service nginx start'` untuk `Sirion` dan `Lindon`.
+
+<p align="center">
+	<img src="img_modul2/image42.png" alt="lindonnginx" width="80%" height="80%">  
+</p>
+
+4. Memverifikasi bahwasannya layanan `nginx` kembali menjawab sesuai fungsinya.
+
+<p align="center">
+	<img src="img_modul2/image43.png" alt="lindonnginx" width="80%" height="80%">  
+</p>
+
+5. Menambahkan `up sh -c 'service php8.4-fpm start'` dan `up sh -c 'service nginx start'` untuk `Vingilot`.
+
+<p align="center">
+	<img src="img_modul2/image44.png" alt="vingilotphpnginx" width="80%" height="80%">  
+</p>
+
+6. Memverifikasi bahwasannya layanan `php8.4-fpm` dan `nginx` kembali menjawab sesuai fungsinya.
+
+<p align="center">
+	<img src="img_modul2/image45.png" alt="vingilotphpnginx" width="80%" height="80%">  
+</p>
