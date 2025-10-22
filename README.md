@@ -846,11 +846,192 @@ service bind9 restart
 	<ol start="9">
 		<li>
 			<p align="justify">
-				Lampion Lindon dinyalakan. Jalankan web statis pada hostname static.&lt;xxxx&gt;.com dan buka folder arsip /annals/ dengan autoindex (directory listing) sehingga isinya dapat ditelusuri. Akses harus dilakukan melalui hostname, bukan IP.
+				Lampion Lindon dinyalakan. Jalankan web statis pada hostname <code>static.&lt;xxxx&gt;.com</code> dan buka folder arsip <code>/annals/</code> dengan autoindex (directory listing) sehingga isinya dapat ditelusuri. Akses harus dilakukan melalui hostname, bukan IP.
 			</p>
 		</li>
 	</ol>
 </blockquote>
+
+<p align="justify">
+&emsp; Pada soal ini, kita akan mengonfigurasi node <b>Lindon</b> sebagai web server statis yang dapat menampilkan isi direktori melalui fitur <b>autoindex</b> dari Nginx. Hostname yang digunakan adalah <code>static.K36.com</code> dan folder arsip yang harus ditampilkan adalah <code>/annals/</code>. Seluruh akses harus dilakukan melalui hostname, bukan IP Address langsung.
+</p>
+
+---
+
+## Langkah Implementasi
+
+### 1. Instalasi dan Persiapan Direktori
+
+```bash
+apt-get update
+apt-get install nginx -y
+
+mkdir -p /var/www/static.K36.com/annals
+echo "Ini adalah arsip pertama Lindon." > /var/www/static.K36.com/annals/test.txt
+```
+
+---
+
+### 2. Konfigurasi Virtual Host
+
+Buat file konfigurasi baru untuk `static.K36.com`:
+
+```bash
+cat > /etc/nginx/sites-available/static.K36.com <<'EOF'
+server {
+    listen 80;
+    server_name static.K36.com;
+    root /var/www/static.K36.com;
+    index index.html index.htm;
+
+    location /annals/ {
+        autoindex on;
+        try_files $uri $uri/ =404;
+    }
+
+    if ($host != "static.K36.com") {
+        return 301 http://static.K36.com$request_uri;
+    }
+}
+EOF
+```
+
+Aktifkan konfigurasi dan pastikan tidak ada error:
+
+```bash
+ln -sf /etc/nginx/sites-available/static.K36.com /etc/nginx/sites-enabled/
+rm -f /etc/nginx/sites-enabled/default
+nginx -t && service nginx restart
+```
+
+---
+
+### 3. Pembuatan Script Otomatis
+
+Untuk mempermudah, langkah-langkah di atas dapat disatukan dalam satu script di root Lindon.
+
+Buat file `/root/setup-lindon.sh`:
+
+```bash
+#!/bin/bash
+# Setup Web Statis Lindon (K36)
+
+apt-get update
+apt-get install nginx -y
+
+mkdir -p /var/www/static.K36.com/annals
+echo "Ini adalah arsip pertama Lindon." > /var/www/static.K36.com/annals/test.txt
+
+cat > /etc/nginx/sites-available/static.K36.com <<'EOF'
+server {
+    listen 80;
+    server_name static.K36.com;
+    root /var/www/static.K36.com;
+    index index.html index.htm;
+
+    location /annals/ {
+        autoindex on;
+        try_files $uri $uri/ =404;
+    }
+
+    if ($host != "static.K36.com") {
+        return 301 http://static.K36.com$request_uri;
+    }
+}
+EOF
+
+ln -sf /etc/nginx/sites-available/static.K36.com /etc/nginx/sites-enabled/
+rm -f /etc/nginx/sites-enabled/default
+
+nginx -t && service nginx restart
+
+echo "✅ Web statis static.K36.com berhasil diaktifkan di Lindon."
+```
+
+Lalu jalankan script:
+
+```bash
+chmod +x /root/setup-lindon.sh
+./setup-lindon.sh
+```
+
+---
+
+### 4. Konfigurasi DNS
+
+Tambahkan record pada DNS di Tirion (`/etc/bind/ns1/K36.com`):
+
+```dns
+lindon  IN  A       192.229.3.103
+static  IN  CNAME   lindon.K36.com.
+```
+
+Restart service Bind9:
+
+```bash
+service bind9 restart
+```
+
+---
+
+### 5. Pengujian
+
+Coba akses dari client (misalnya Elrond atau Cirdan):
+
+```bash
+ping static.K36.com -c 3
+```
+
+Kemudian uji melalui HTTP:
+
+```bash
+curl http://static.K36.com/annals/
+```
+
+Hasil yang diharapkan:
+
+```html
+<html>
+<head><title>Index of /annals/</title></head>
+<body>
+<h1>Index of /annals/</h1><hr><pre><a href="../">../</a>
+<a href="test.txt">test.txt</a>
+</pre><hr></body>
+</html>
+```
+
+---
+
+### 6. Verifikasi Akses Melalui Hostname
+
+Coba akses menggunakan IP langsung:
+
+```bash
+curl http://192.229.3.103/annals/
+```
+
+Hasil yang muncul harus berupa redirect:
+
+```html
+<html>
+<head><title>301 Moved Permanently</title></head>
+<body>
+<center><h1>301 Moved Permanently</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
+```
+
+Hal ini menunjukkan bahwa akses hanya diizinkan melalui hostname `static.K36.com`.
+
+---
+
+## Kesimpulan
+
+<p align="justify">
+&emsp; Berdasarkan hasil konfigurasi dan pengujian, node <b>Lindon</b> berhasil dijalankan sebagai web statis dengan hostname <code>static.K36.com</code>. Folder <code>/annals/</code> dapat ditelusuri menggunakan fitur <b>autoindex</b>, dan seluruh akses berhasil dibatasi hanya melalui hostname, bukan IP Address. Konfigurasi juga dapat dijalankan secara otomatis menggunakan script <code>setup-lindon.sh</code> yang dibuat di direktori root.
+</p>
+
 
 ### • Soal 10
 
@@ -858,11 +1039,249 @@ service bind9 restart
 	<ol start="10">
 		<li>
 			<p align="justify">
-				Vingilot mengisahkan cerita dinamis. Jalankan web dinamis (PHP-FPM) pada hostname app.&lt;xxxx&gt;.com dengan beranda dan halaman about, serta terapkan rewrite sehingga /about berfungsi tanpa akhiran .php. Akses harus dilakukan melalui hostname.
+				Vingilot mengisahkan cerita dinamis. Jalankan web dinamis (PHP-FPM) pada hostname <code>app.&lt;xxxx&gt;.com</code> dengan beranda dan halaman <code>about</code>, serta terapkan rewrite sehingga <code>/about</code> berfungsi tanpa akhiran <code>.php</code>. Akses harus dilakukan melalui hostname.
 			</p>
 		</li>
 	</ol>
 </blockquote>
+
+<p align="justify">
+&emsp; Pada soal ini, kita akan mengonfigurasi node <b>Vingilot</b> sebagai web dinamis menggunakan <b>PHP-FPM</b> dengan Nginx. Web ini akan diakses menggunakan hostname <code>app.K36.com</code> dan memiliki dua halaman utama, yaitu <code>index.php</code> (beranda) dan <code>about.php</code> (halaman tentang). Selain itu, kita perlu mengaktifkan aturan rewrite agar pengguna dapat mengakses <code>/about</code> tanpa perlu menuliskan akhiran <code>.php</code>.
+</p>
+
+---
+
+## Langkah Implementasi
+
+### 1. Instalasi dan Persiapan Direktori
+
+```bash
+apt-get update
+apt-get install nginx php php-fpm -y
+
+mkdir -p /var/www/app.K36.com
+cd /var/www/app.K36.com
+```
+
+Buat dua file PHP utama:
+
+```bash
+cat > /var/www/app.K36.com/index.php <<'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vingilot - Home</title>
+</head>
+<body>
+    <h1>Selamat datang di Vingilot</h1>
+    <p>Ini adalah halaman utama dari web dinamis K36.</p>
+    <a href="/about">Tentang Kami</a>
+</body>
+</html>
+EOF
+
+cat > /var/www/app.K36.com/about.php <<'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vingilot - About</title>
+</head>
+<body>
+    <h1>Tentang Vingilot</h1>
+    <p>Vingilot adalah kapal Earendil yang berlayar menuju Aman membawa cahaya Silmaril.</p>
+    <a href="/">Kembali ke Beranda</a>
+</body>
+</html>
+EOF
+```
+
+---
+
+### 2. Konfigurasi Virtual Host
+
+Buat file konfigurasi baru untuk `app.K36.com`:
+
+```bash
+cat > /etc/nginx/sites-available/app.K36.com <<'EOF'
+server {
+    listen 80;
+    server_name app.K36.com;
+    root /var/www/app.K36.com;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location /about {
+        rewrite ^/about$ /about.php last;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php-fpm.sock;
+    }
+
+    if ($host != "app.K36.com") {
+        return 301 http://app.K36.com$request_uri;
+    }
+}
+EOF
+```
+
+Aktifkan konfigurasi dan pastikan tidak ada error:
+
+```bash
+ln -sf /etc/nginx/sites-available/app.K36.com /etc/nginx/sites-enabled/
+rm -f /etc/nginx/sites-enabled/default
+nginx -t && service nginx restart
+```
+
+---
+
+### 3. Pembuatan Script Otomatis
+
+Untuk mempermudah, langkah-langkah di atas dapat disatukan dalam satu script di root Vingilot.
+
+Buat file `/root/setup-vingilot.sh`:
+
+```bash
+#!/bin/bash
+# Setup Web Dinamis Vingilot (K36)
+
+apt-get update
+apt-get install nginx php php-fpm -y
+
+mkdir -p /var/www/app.K36.com
+
+cat > /var/www/app.K36.com/index.php <<'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vingilot - Home</title>
+</head>
+<body>
+    <h1>Selamat datang di Vingilot</h1>
+    <p>Ini adalah halaman utama dari web dinamis K36.</p>
+    <a href="/about">Tentang Kami</a>
+</body>
+</html>
+EOF
+
+cat > /var/www/app.K36.com/about.php <<'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vingilot - About</title>
+</head>
+<body>
+    <h1>Tentang Vingilot</h1>
+    <p>Vingilot adalah kapal Earendil yang berlayar menuju Aman membawa cahaya Silmaril.</p>
+    <a href="/">Kembali ke Beranda</a>
+</body>
+</html>
+EOF
+
+cat > /etc/nginx/sites-available/app.K36.com <<'EOF'
+server {
+    listen 80;
+    server_name app.K36.com;
+    root /var/www/app.K36.com;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location /about {
+        rewrite ^/about$ /about.php last;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php-fpm.sock;
+    }
+
+    if ($host != "app.K36.com") {
+        return 301 http://app.K36.com$request_uri;
+    }
+}
+EOF
+
+ln -sf /etc/nginx/sites-available/app.K36.com /etc/nginx/sites-enabled/
+rm -f /etc/nginx/sites-enabled/default
+
+nginx -t && service nginx restart
+echo "✅ Web dinamis app.K36.com berhasil diaktifkan di Vingilot."
+```
+
+Lalu jalankan script:
+
+```bash
+chmod +x /root/setup-vingilot.sh
+./setup-vingilot.sh
+```
+
+---
+
+### 4. Konfigurasi DNS
+
+Tambahkan record pada DNS di Tirion (`/etc/bind/ns1/K36.com`):
+
+```dns
+vingilot  IN  A       192.229.3.104
+app       IN  CNAME   vingilot.K36.com.
+```
+
+Restart service Bind9:
+
+```bash
+service bind9 restart
+```
+
+---
+
+### 5. Pengujian
+
+Coba akses dari client:
+
+```bash
+ping app.K36.com -c 3
+```
+
+Lalu akses melalui HTTP:
+
+```bash
+curl http://app.K36.com/
+```
+
+Hasil yang diharapkan:
+
+```html
+<h1>Selamat datang di Vingilot</h1>
+```
+
+Uji rewrite rule:
+
+```bash
+curl http://app.K36.com/about
+```
+
+Hasil yang diharapkan:
+
+```html
+<h1>Tentang Vingilot</h1>
+```
+
+---
+
+## Kesimpulan
+
+<p align="justify">
+&emsp; Berdasarkan hasil konfigurasi dan pengujian, node <b>Vingilot</b> berhasil dijalankan sebagai web dinamis dengan hostname <code>app.K36.com</code>. Web ini memiliki dua halaman (beranda dan tentang) dan mendukung rewrite URL sehingga <code>/about</code> dapat diakses tanpa ekstensi <code>.php</code>. Konfigurasi juga dapat dijalankan otomatis melalui script <code>setup-vingilot.sh</code>.
+</p>
+
+
 
 ### • Soal 11
 
