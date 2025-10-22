@@ -7,6 +7,11 @@
 | Ahmad Wildan Fawwaz| 5027241001 |
 | Muhammad Rakha Hananditya R.| 5027241015 |
 
+## Asisten Penguji
+| Nama | Kode Asisten |
+|-----------------------|----|
+| Athalla Barka Fadhil | P7 |
+
 ## Pendahuluan
 
 بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيْمِ
