@@ -227,14 +227,22 @@ iface eth0 inet static
 ### • Soal 2
 
 <blockquote>
-    <ol start="2">
-        <li>
-            <p align="justify">
-Angin dari luar mulai berhembus ketika Eonwe membuka jalan ke awan NAT. Pastikan jalur WAN di router aktif dan NAT meneruskan trafik keluar bagi seluruh alamat internal sehingga host di dalam dapat mencapai layanan di luar menggunakan IP address.
-    </p>
-        </li>
-    </ol>
+	<ol start="2">
+		<li>
+			<p align="justify">
+				Angin dari luar mulai berhembus ketika Eonwe membuka jalan ke awan NAT. Pastikan jalur WAN di router aktif dan NAT meneruskan trafik keluar bagi seluruh alamat internal sehingga host di dalam dapat mencapai layanan di luar menggunakan IP address.
+			</p>
+		</li>
+	</ol>
 </blockquote>
+
+<p align="justify">
+&emsp; Pada kasus persoalan ini, untuk meneruskan trafik keluar bagi seluruh alamat internal, tidak perlu menjalankan command <code>IPTABLES</code>. Maka dari itu, untuk dapat menyelesaikan soal ini, kita hanya perlu melakukan <code>ping</code> ke <code>google.com</code>.
+</p>
+
+<p align="center">
+	<img src="img_modul2/image46.png" alt="ping" width="80%" height="80%">  
+</p>
 
 ### • Soal 3
 
