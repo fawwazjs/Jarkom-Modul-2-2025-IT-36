@@ -1537,6 +1537,19 @@ Hasil:
 	</ol>
 </blockquote>
 
+<p align="justify">
+&emsp; Untuk dapat memverifikasi bahwasannya akses ke IP address <b>Sirion</b> ataupun ke nama domain <code>sirion.K36.com</code> telah ter-redirect ke <code>www.K36.com</code>, maka kita dapat menggunakan command <code>curl</code>, dengan menggunakan <b>Cirdan</b> sebagai contoh:
+</p>
+
+```bash
+curl -I 192.229.3.100
+curl -I sirion.K36.com
+```
+
+<p align="center">
+	<img src="img_modul2/image47.png" alt="curlredirect" width="80%" height="80%">  
+</p>
+
 ### • Soal 14
 
 <blockquote>
