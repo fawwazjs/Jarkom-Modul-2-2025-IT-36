@@ -1283,29 +1283,247 @@ Hasil yang diharapkan:
 
 
 
-### • Soal 11
+## • Soal 11 – Reverse Proxy
 
 <blockquote>
 	<ol start="11">
 		<li>
 			<p align="justify">
-				Di muara sungai, Sirion berdiri sebagai reverse proxy. Terapkan path-based routing: /static → Lindon dan /app → Vingilot, sambil meneruskan header Host dan X-Real-IP ke backend. Pastikan Sirion menerima www.&lt;xxxx&gt;.com (kanonik) dan sirion.&lt;xxxx&gt;.com, dan bahwa konten pada /static dan /app di-serve melalui backend yang tepat.
+				Awan berkumpul di pelabuhan. Sirion menjadi reverse proxy untuk dua wilayah: 
+				<ul>
+					<li><b>static.&lt;xxxx&gt;.com</b> → <code>http://192.229.3.103/</code></li>
+					<li><b>app.&lt;xxxx&gt;.com</b> → <code>http://192.229.3.104/</code></li>
+				</ul>
+				Di mana Sirion harus meneruskan request berdasarkan hostname yang diakses oleh klien.
 			</p>
 		</li>
 	</ol>
 </blockquote>
 
-### • Soal 12
+<p align="justify">
+&emsp; Pada soal ini, node <b>Sirion</b> akan dikonfigurasi sebagai <b>reverse proxy</b> menggunakan Nginx. Setiap permintaan dari klien akan diteruskan ke server tujuan berdasarkan hostname yang diakses. Hostname <code>static.K36.com</code> akan diarahkan ke server <b>Lindon</b>, sedangkan <code>app.K36.com</code> diarahkan ke server <b>Vingilot</b>.
+</p>
+
+---
+
+## Langkah Implementasi
+
+### 1. Instalasi Nginx
+```bash
+apt-get update
+apt-get install nginx -y
+```
+
+### 2. Konfigurasi Reverse Proxy
+Buat file konfigurasi baru `/etc/nginx/sites-available/K36.com` di node Sirion:
+
+```bash
+cat > /etc/nginx/sites-available/K36.com <<'EOF'
+server {
+    listen 80;
+    server_name static.K36.com;
+
+    location / {
+        proxy_pass http://192.229.3.103/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+
+server {
+    listen 80;
+    server_name app.K36.com;
+
+    location / {
+        proxy_pass http://192.229.3.104/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+EOF
+```
+
+Aktifkan konfigurasi dan hapus default:
+```bash
+ln -sf /etc/nginx/sites-available/K36.com /etc/nginx/sites-enabled/
+rm -f /etc/nginx/sites-enabled/default
+nginx -t && service nginx restart
+```
+
+### 3. Pembuatan Script Otomatis
+Buat script `/root/setup-sirion.sh`:
+
+```bash
+#!/bin/bash
+# Setup Reverse Proxy Sirion (K36)
+
+apt-get update
+apt-get install nginx -y
+
+cat > /etc/nginx/sites-available/K36.com <<'EOF'
+server {
+    listen 80;
+    server_name static.K36.com;
+
+    location / {
+        proxy_pass http://192.229.3.103/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+
+server {
+    listen 80;
+    server_name app.K36.com;
+
+    location / {
+        proxy_pass http://192.229.3.104/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+EOF
+
+ln -sf /etc/nginx/sites-available/K36.com /etc/nginx/sites-enabled/
+rm -f /etc/nginx/sites-enabled/default
+
+nginx -t && service nginx restart
+
+echo "✅ Reverse Proxy Sirion berhasil diaktifkan!"
+```
+
+Jalankan script:
+```bash
+chmod +x /root/setup-sirion.sh
+./setup-sirion.sh
+```
+
+### 4. Pengujian
+**a. Untuk static.K36.com**
+```bash
+curl http://static.K36.com/
+```
+→ Akan diarahkan ke Lindon (192.229.3.103).
+
+**b. Untuk app.K36.com**
+```bash
+curl http://app.K36.com/
+```
+→ Akan diarahkan ke Vingilot (192.229.3.104).
+
+### ✅ Kesimpulan
+<p align="justify"> &emsp; Node <b>Sirion</b> berhasil berfungsi sebagai <b>reverse proxy</b> yang meneruskan request ke server sesuai hostname. Request menuju <code>static.K36.com</code> diteruskan ke Lindon, dan <code>app.K36.com</code> ke Vingilot. </p>
+
+---
+
+## • Soal 12 – Proteksi Path /admin dengan Basic Auth
 
 <blockquote>
 	<ol start="12">
 		<li>
 			<p align="justify">
-				Ada kamar kecil di balik gerbang yakni /admin. Lindungi path tersebut di Sirion menggunakan Basic Auth, akses tanpa kredensial harus ditolak dan akses dengan kredensial yang benar harus diizinkan.
+				Ada kamar kecil di balik gerbang yakni <code>/admin</code>. Lindungi path tersebut di Sirion menggunakan Basic Auth, akses tanpa kredensial harus ditolak dan akses dengan kredensial yang benar harus diizinkan.
 			</p>
 		</li>
 	</ol>
 </blockquote>
+
+<p align="justify">
+&emsp; Pada soal ini, kita menambahkan lapisan keamanan berupa <b>Basic Authentication</b> di server <b>Sirion</b> untuk melindungi path <code>/admin</code>. Hanya pengguna dengan kredensial yang benar yang dapat mengaksesnya.
+</p>
+
+---
+
+## Langkah Implementasi
+
+### 1. Instalasi Paket Pendukung
+```bash
+apt-get update
+apt-get install apache2-utils -y
+```
+
+### 2. Membuat File Kredensial
+```bash
+htpasswd -cb /etc/nginx/.htpasswd noiris esteh3000
+```
+
+### 3. Menambahkan Konfigurasi Basic Auth
+Edit `/etc/nginx/sites-available/K36.com` dan tambahkan di bawah konfigurasi existing:
+
+```bash
+location /admin/ {
+    auth_basic "Restricted Area";
+    auth_basic_user_file /etc/nginx/.htpasswd;
+    return 200 "<h1>Welcome to Admin Area</h1>\n";
+}
+```
+
+Uji sintaks dan restart Nginx:
+```bash
+nginx -t && service nginx restart
+```
+
+### 4. Script Otomatis
+Buat file `/root/admin-sirion.sh`:
+
+```bash
+#!/bin/bash
+# Setup Basic Auth untuk /admin di Sirion (K36)
+
+apt-get update
+apt-get install apache2-utils -y
+
+# Membuat file user password
+htpasswd -cb /etc/nginx/.htpasswd noiris esteh3000
+
+CONF_FILE="/etc/nginx/sites-available/K36.com"
+
+if ! grep -q "location /admin/" "$CONF_FILE"; then
+cat >> "$CONF_FILE" <<'EOF'
+
+location /admin/ {
+    auth_basic "Restricted Area";
+    auth_basic_user_file /etc/nginx/.htpasswd;
+    return 200 "<h1>Welcome to Admin Area</h1>\n";
+}
+EOF
+fi
+
+nginx -t && service nginx restart
+echo "✅ Basic Auth diaktifkan!"
+echo "   Username: noiris"
+echo "   Password: esteh3000"
+```
+
+Jalankan script:
+```bash
+chmod +x /root/admin-sirion.sh
+./admin-sirion.sh
+```
+
+### 5. Pengujian
+**a. Akses tanpa kredensial**
+```bash
+curl -i http://www.K36.com/admin/
+```
+Hasil:
+```
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Basic realm="Restricted Area"
+```
+
+**b. Akses dengan kredensial**
+```bash
+curl -u noiris:esteh3000 http://www.K36.com/admin/
+```
+Hasil:
+```html
+<h1>Welcome to Admin Area</h1>
+```
+
+### ✅ Kesimpulan
+<p align="justify"> &emsp; Path <code>/admin</code> di node <b>Sirion</b> kini terlindungi menggunakan <b>Basic Authentication</b>. Pengguna tanpa kredensial akan ditolak (HTTP 401), sementara pengguna sah dapat mengakses halaman dengan pesan <code>Welcome to Admin Area</code>. </p>
+
 
 ### • Soal 13
 
